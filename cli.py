@@ -4,6 +4,7 @@ import sys
 import git
 from anthropic import Anthropic
 import argparse
+import requests
 
 def get_staged_diff():
     """
@@ -29,27 +30,22 @@ Return only the commit message without any additional explanation."""
 
 
 def generate_commit_message(diff, api_key=None):
-    """Generate a commit message using Claude API."""
-    if not api_key:
-        api_key = os.getenv('ANTHROPIC_API_KEY')
-        if not api_key:
-            print("Error: ANTHROPIC_API_KEY not found in environment variables")
-            sys.exit(1)
-    
-    client = Anthropic(api_key=api_key)
-    
+    """Generate a commit message using Ollama API."""
     try:
-        message = client.messages.create(
-            model="claude-2.1",
-            max_tokens=300,
-            temperature=0.7,
-            system="You are a helpful assistant that generates clear and concise git commit messages.",
-            messages=[{
-                "role": "user",
-                "content": get_conventional_commit_prompt(diff)
-            }]
-        )
-        return message.content[0].text
+        response = requests.post('http://localhost:11434/api/generate', 
+            json={
+                "model": "llama3.2",  # or whichever model you want to use
+                "prompt": get_conventional_commit_prompt(diff),
+                "system": "You are a helpful assistant that generates clear and concise git commit messages.",
+                "stream": False
+            })
+        
+        if response.status_code == 200:
+            return response.json()['response']
+        else:
+            print(f"Error: Ollama API returned status code {response.status_code}")
+            sys.exit(1)
+            
     except Exception as e:
         print(f"Error generating commit message: {str(e)}")
         sys.exit(1)
