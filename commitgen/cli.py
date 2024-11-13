@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
 import os
 import subprocess
 import sys
 import git
 import argparse
 import requests
+from importlib import resources
 
 
 def get_staged_diff():
@@ -19,10 +21,30 @@ def get_staged_diff():
         return None
 
 
-def get_conventional_commit_prompt(diff):
+def get_readme_content():
+    """
+    Reads the README.md file from the current directory.
+    Returns None if the file doesn't exist.
+    """
+    try:
+        with open("README.md", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
+
+def get_conventional_commit_prompt(diff, keywords=None):
     """Create a prompt for Claude to generate a conventional commit message."""
-    with open("prompt.txt", "r") as file:
-        prompt = file.read()
+    prompt = resources.read_text('commitgen', 'prompt.txt')
+    
+    # Add README content to the prompt if available
+    readme_content = get_readme_content()
+    if readme_content:
+        prompt += f"\n\nHere's the project's README.md content for context:\n{readme_content}"
+    
+    if keywords:
+        prompt += f"\nHere are some helpful keywords to base the commit message on: {keywords}"
+    
     return f"""{prompt}
 Here's the diff:
 {diff}
@@ -30,14 +52,14 @@ Here's the diff:
 Return only the commit message without any additional explanation."""
 
 
-def generate_commit_message(diff):
+def generate_commit_message(diff, keywords=None):
     """Generate a commit message using Ollama API."""
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={
                 "model": "llama3.2",  # or whichever model you want to use
-                "prompt": get_conventional_commit_prompt(diff),
+                "prompt": get_conventional_commit_prompt(diff, keywords),
                 "system": "You are a helpful assistant that generates clear and concise git commit messages.",
                 "stream": False,
             },
@@ -62,6 +84,9 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", help="Show the message without committing"
     )
+    parser.add_argument(
+        "-k", "--keywords", type=str, nargs='+', help="Helpful keywords to base the commit message on"
+    )
     args = parser.parse_args()
 
     try:
@@ -74,12 +99,14 @@ def main():
             print("No changes staged for commit")
             sys.exit(1)
 
+        if args.keywords:
+            keywords = args.keywords
         # Get and analyze the diff
         diff = get_staged_diff()
 
         response = "r"
         while response == "r":
-            message = generate_commit_message(diff)
+            message = generate_commit_message(diff, keywords)
             print("\nRegenerated commit message:")
             print("-" * 50)
             print(message)
@@ -97,12 +124,7 @@ def main():
                     print("Error: Failed to commit changes")
                     sys.exit(1)
             elif response == "r":
-                # regenerate the message
-                message = generate_commit_message(diff)
-                print("\nRegenerated commit message:")
-                print("-" * 50)
-                print(message)
-                print("-" * 50)
+                continue
             else:
                 print("Commit canceled.")
                 sys.exit(0)
