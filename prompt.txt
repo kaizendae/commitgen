@@ -15,3 +15,7 @@ Given the following git diff, generate a conventional commit message following t
 16. Use hyphens (-) for bullet points in the body if needed
 17. Separate subject from body with a blank line
 18. Use the body to explain what and why vs. how
+19. Only include a scope if it is clearly identifiable from the changed files or
+    code, do not make assumptions about the scope
+20. Scope should be short and only contain the component name (e.g. "cli", "api", 
+    "core"), not descriptions or file extensions
