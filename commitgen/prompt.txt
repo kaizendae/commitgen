@@ -14,8 +14,10 @@ Focus on additions, deletions, and modifications without detailing the entire co
 3. If applicable, explain the purpose behind grouped changes, such as renaming files to improve project structure or adding a `setup.py` file to enable pip installation.
 
 Every change in the diff starts with `diff --git` and end where the next `diff --git` starts.
-Every line that doesn't start with `+` or `-` is old code and doesn't need to be mentioned in the commit message.
+Every line that doesn't start with `+` or `-` is old code and doesn't need to be mentioned in the commit message. THIS HIGHLY CRITICAL DO NOT SKIP IT
 try to make the commit less generic, as making it generic would fall into desrcribing old code less than the relevant changes.
+
+DO NOT INCLUDE ANY NOTES, JUST THE COMMIT MESSAGE.
 
 1. Start with one of these types: feat, fix, docs, style, refactor, perf, test, chore
 2. Add a scope in parentheses if clear from the changes
