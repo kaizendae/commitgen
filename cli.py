@@ -40,7 +40,7 @@ def generate_commit_message(diff, api_key=None):
     
     try:
         message = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-2.1",
             max_tokens=300,
             temperature=0.7,
             system="You are a helpful assistant that generates clear and concise git commit messages.",
