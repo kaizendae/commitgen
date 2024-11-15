@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-import os
 import subprocess
 import sys
-import git
 import argparse
-import requests
-from importlib import resources
 
 from commitgen.git_operations import GitOperations
 from commitgen.ollama_client import OllamaClient
